@@ -1405,60 +1405,18 @@ function copiarMissao(){
  atualizarTudo(false);
 }
 function enviarOSporEmail(){
- const osNum=($("numeroOS").value.trim())||"s_n";
- const nomeArq="OS_"+(osNum.replace(/\//g,"_"))+".pdf";
- if(!confirm(
-  "Envio da OS por e-mail — 2 etapas:\n\n"+
-  "① Clique OK  →  diálogo de impressão abre.\n"+
-  "   Escolha \"Salvar como PDF\" e salve como:\n"+
-  "   "+nomeArq+"\n\n"+
-  "② Após fechar o diálogo  →  botão aparece na tela\n"+
-  "   para abrir o Outlook com e-mail preenchido.\n"+
-  "   Anexe o PDF salvo e revise antes de enviar.\n\n"+
-  "Deseja continuar?"
- ))return;
  atualizarTudo(true);
- const docs=document.querySelectorAll(".doc");
- const prevSel=new Set([...docs].filter(d=>d.classList.contains("print-selected")).map(d=>d.id));
- const prevAll=new Set([...docs].filter(d=>d.classList.contains("print-all")).map(d=>d.id));
- docs.forEach(d=>{d.classList.remove("print-all","print-selected");});
- $("docOS").classList.add("print-selected");
- aplicarOrientacaoPrint(["docOS"]);
- const mostrarBotaoEmail=()=>{
-  docs.forEach(d=>{d.classList.remove("print-selected","print-all");});
-  prevSel.forEach(did=>{if($(did))$(did).classList.add("print-selected");});
-  prevAll.forEach(did=>{if($(did))$(did).classList.add("print-all");});
-  limparOrientacaoPrint();
-  window.removeEventListener("afterprint",mostrarBotaoEmail);
-  const h=new Date().getHours();
-  const saudacao=h>=5&&h<12?"Bom dia!":h>=12&&h<18?"Boa tarde!":"Boa noite!";
-  const assunto=encodeURIComponent("Solicitação de nº de requisição para Ordem de Serviço");
-  const corpo=encodeURIComponent(saudacao+"\r\n\r\n"+"Solicito nº de requisição para a OS em anexo.\r\n\r\n"+"Atenciosamente.");
-  const isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-  const url=isMobile
-   ?"mailto:?subject="+assunto+"&body="+corpo
-   :"https://outlook.office.com/mail/deeplink/compose?subject="+assunto+"&body="+corpo;
-  const ov=document.createElement("div");
-  ov.id="_emailOv";
-  ov.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center";
-  ov.innerHTML=
-   '<div style="background:#1a1a2e;border:2px solid #00e676;border-radius:12px;padding:36px 32px;max-width:380px;text-align:center;font-family:Arial,sans-serif;">'+
-   '<div style="font-size:44px;margin-bottom:12px">✅</div>'+
-   '<div style="color:#00e676;font-size:17px;font-weight:bold;margin-bottom:8px">PDF salvo!</div>'+
-   '<div style="color:#ccc;font-size:14px;margin-bottom:24px">Clique no botão abaixo para abrir o Outlook<br>com assunto e texto já preenchidos.<br><br>'+
-   '<span style="color:#aaa;font-size:12px">Depois é só anexar o arquivo <b style="color:#fff">'+nomeArq+'</b><br>e clicar em Enviar.</span></div>'+
-   '<a href="'+url+'" target="_blank" rel="noopener" '+
-    'onclick="document.getElementById(\'_emailOv\').remove()" '+
-    'style="display:inline-block;background:#0078d4;color:#fff;padding:13px 30px;border-radius:7px;text-decoration:none;font-weight:bold;font-size:15px;margin-bottom:14px">'+
-    'Abrir Outlook ✉</a><br>'+
-   '<button onclick="document.getElementById(\'_emailOv\').remove()" '+
-    'style="background:transparent;border:1px solid #555;color:#888;padding:6px 18px;border-radius:5px;cursor:pointer;font-size:13px;margin-top:4px">'+
-    'Fechar</button>'+
-   '</div>';
-  document.body.appendChild(ov);
- };
- window.addEventListener("afterprint",mostrarBotaoEmail);
- setTimeout(()=>window.print(),150);
+ const h=new Date().getHours();
+ const saudacao=h>=5&&h<12?"Bom dia!":h>=12&&h<18?"Boa tarde!":"Boa noite!";
+ const osNum=limparNumeroOS($("numeroOS").value);
+ const detalheOS=osNum?` nº ${osNum}`:"";
+ const assunto=encodeURIComponent("Solicitação de nº de requisição para Ordem de Serviço");
+ const corpo=encodeURIComponent(saudacao+"\r\n\r\n"+`Solicito nº de requisição para a Ordem de Serviço${detalheOS}.`+"\r\n\r\n"+"Atenciosamente.");
+ const url=dispositivoMovel()
+  ?"mailto:?subject="+assunto+"&body="+corpo
+  :"https://outlook.office.com/mail/deeplink/compose?subject="+assunto+"&body="+corpo;
+ if(dispositivoMovel())window.location.href=url;
+ else window.open(url,"_blank","noopener");
 }
 async function exportarPDFDoc(id){
  atualizarTudo(true);
