@@ -1521,7 +1521,14 @@ function injetarManifestPWA(){
  if(!ali){ali=document.createElement("link");ali.rel="apple-touch-icon";document.head.appendChild(ali);}
  ali.href=icone;
  if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  navigator.serviceWorker.getRegistrations()
+   .then(regs=>Promise.all(regs.map(reg=>reg.unregister())))
+   .catch(()=>{});
+ }
+ if("caches" in window){
+  caches.keys()
+   .then(keys=>Promise.all(keys.map(key=>caches.delete(key))))
+   .catch(()=>{});
  }
 }
 function ajustarZoomDocs(){
