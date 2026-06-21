@@ -674,11 +674,25 @@ input::placeholder,textarea::placeholder{color:#bbb;font-style:italic}
 
 @media print{
  /* Garantir que nenhum transform inline afete a impressão */
- .doc{transform:none !important;}
- /* Evitar página em branco após o último documento */
- #docRelatorio{page-break-after:avoid !important;break-after:avoid !important;}
- /* Evitar página em branco ao imprimir um único documento */
- .doc.print-selected{page-break-after:avoid !important;break-after:avoid !important;}
+ .doc{
+  transform:none !important;
+  page-break-after:auto !important;
+  break-after:auto !important;
+ }
+ .doc.print-all{
+  page-break-before:auto !important;
+  break-before:auto !important;
+ }
+ .doc.print-all ~ .doc.print-all{
+  page-break-before:always !important;
+  break-before:page !important;
+ }
+ .doc.print-selected{
+  page-break-before:auto !important;
+  break-before:auto !important;
+  page-break-after:auto !important;
+  break-after:auto !important;
+ }
 }
 
 #docOS, #docOS *,
@@ -1144,8 +1158,101 @@ function limparOrientacaoPrint(){
  if(st)st.remove();
 }
 
-function imprimirPDFOficial(){
+function dispositivoMovel(){
+ return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+}
+function nomePDFDocs(ids){
+ const os=numeroOSNomeArquivo($("numeroOS").value||"sem_numero")||"sem_numero";
+ if(ids.length>1)return `documentos_OS_${os}.pdf`;
+ const nomes={docOS:"ordem_servico",docReq:"requisicao_diarias",docAtestado:"atestado",docRelatorio:"descricao_circunstanciada"};
+ return `${nomes[ids[0]]||"documento"}_${os}.pdf`;
+}
+function carregarScript(src){
+ return new Promise((resolve,reject)=>{
+  if(document.querySelector(`script[src="${src}"]`)){resolve();return;}
+  const s=document.createElement("script");
+  s.src=src;
+  s.onload=resolve;
+  s.onerror=()=>reject(new Error("Falha ao carregar "+src));
+  document.head.appendChild(s);
+ });
+}
+async function garantirBibliotecasPDF(){
+ if(window.html2canvas&&window.jspdf?.jsPDF)return;
+ await carregarScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
+ await carregarScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+}
+function prepararClonePDF(doc){
+ const clone=doc.cloneNode(true);
+ const paisagem=doc.id==="docReq";
+ clone.classList.add("active");
+ clone.classList.remove("print-all","print-selected");
+ clone.style.cssText=[
+  "display:block",
+  "position:relative",
+  "transform:none",
+  "transform-origin:top left",
+  "margin:0",
+  "border:0",
+  "box-shadow:none",
+  "background:#fff",
+  "overflow:hidden",
+  "box-sizing:border-box",
+  `width:${paisagem?297:210}mm`,
+  `height:${paisagem?210:297}mm`,
+  `min-height:${paisagem?210:297}mm`
+ ].join(";")+";";
+ if(doc.id==="docOS"){
+  clone.style.padding="13mm 18mm 14mm 20mm";
+  clone.style.fontSize="11.8pt";
+  clone.style.lineHeight="1.12";
+ }else if(doc.id==="docReq"){
+  clone.style.padding="8mm 13mm 10mm 13mm";
+  clone.style.fontSize="11.2pt";
+  clone.style.lineHeight="1.08";
+ }else{
+  clone.style.padding="10mm 10mm 12.7mm 11mm";
+  clone.style.fontSize="12pt";
+  clone.style.lineHeight="1.12";
+ }
+ return clone;
+}
+async function gerarPDFMobile(ids){
+ await garantirBibliotecasPDF();
+ const {jsPDF}=window.jspdf;
+ const area=document.createElement("div");
+ area.style.cssText="position:absolute;left:-10000px;top:0;background:#fff;z-index:-1";
+ document.body.appendChild(area);
+ try{
+  let pdf=null;
+  for(let i=0;i<ids.length;i++){
+   const doc=$(ids[i]);
+   const paisagem=ids[i]==="docReq";
+   const largura=paisagem?297:210;
+   const altura=paisagem?210:297;
+   const clone=prepararClonePDF(doc);
+   area.innerHTML="";
+   area.appendChild(clone);
+   const canvas=await html2canvas(clone,{scale:2,backgroundColor:"#fff",useCORS:true,logging:false});
+   const img=canvas.toDataURL("image/jpeg",0.98);
+   if(!pdf)pdf=new jsPDF({orientation:paisagem?"landscape":"portrait",unit:"mm",format:"a4",compress:true});
+   else pdf.addPage("a4",paisagem?"landscape":"portrait");
+   pdf.addImage(img,"JPEG",0,0,largura,altura,undefined,"FAST");
+  }
+  pdf.save(nomePDFDocs(ids));
+ }finally{
+  area.remove();
+ }
+}
+
+async function imprimirPDFOficial(){
  atualizarTudo(true);
+ if(dispositivoMovel()){
+  let gerou=false;
+  try{await gerarPDFMobile(["docOS","docReq","docAtestado","docRelatorio"]);gerou=true;}
+  catch(e){console.error(e);alert("Não foi possível gerar o PDF direto no celular. Vou abrir a impressão normal.");}
+  if(gerou)return;
+ }
  limparOrientacaoPrint();
  document.querySelectorAll(".doc").forEach(d=>{
    d.classList.add("active");
@@ -1353,8 +1460,12 @@ function enviarOSporEmail(){
  window.addEventListener("afterprint",mostrarBotaoEmail);
  setTimeout(()=>window.print(),150);
 }
-function exportarPDFDoc(id){
+async function exportarPDFDoc(id){
  atualizarTudo(true);
+ if(dispositivoMovel()){
+  try{await gerarPDFMobile([id]);return;}
+  catch(e){console.error(e);alert("Não foi possível gerar o PDF direto no celular. Vou abrir a impressão normal.");}
+ }
  const docs=document.querySelectorAll(".doc");
  const prevSel=new Set([...docs].filter(d=>d.classList.contains("print-selected")).map(d=>d.id));
  const prevAll=new Set([...docs].filter(d=>d.classList.contains("print-all")).map(d=>d.id));
