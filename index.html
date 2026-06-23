@@ -420,6 +420,7 @@ table{width:100%;border-collapse:collapse}.grid td,.grid th{border:1px solid #33
     left:11mm !important;
     right:10mm !important;
     bottom:12.7mm !important;
+    border:0 !important;
     margin:0 !important;
     padding:16mm 14mm 8mm !important;
     gap:18mm !important;
@@ -1029,7 +1030,7 @@ function obterDados(){
 function osPessoalHTML(sv){
  if(sv.length===0)return `<p style="color:#900;">Nenhum servidor selecionado.</p>`;
  if(sv.length===1){
-  const s=sv[0];return `<p>${esc(s.cargo)} ${esc(s.assinatura||s.nome)} – ID: ${esc(s.id)} – CPF: ${esc(s.cpf)} – Código Credor: ${esc(s.credor)}</p>`;
+  const s=sv[0];return `<ul class="os-pessoal-list"><li>${esc(s.cargo)} ${esc(s.assinatura||s.nome)} – ID: ${esc(s.id)} – CPF: ${esc(s.cpf)} – Código Credor: ${esc(s.credor)}</li></ul>`;
  }
  return `<ul class="os-pessoal-list">`+sv.map(s=>`<li>${esc(s.cargo)} ${esc(s.assinatura||s.nome)} – ID: ${esc(s.id)} – CPF: ${esc(s.cpf)} – Código Credor: ${esc(s.credor)}</li>`).join("")+`</ul>`;
 }
@@ -1050,7 +1051,7 @@ function renderOS(d){
  <div class="os-block os-subitem">a)&nbsp;&nbsp; Pessoal:</div>
  <div class="os-personal">${osPessoalHTML(d.servidores)}</div>
 
- <div class="os-block os-material">b)Material: ${esc(d.material)}</div>
+ <div class="os-block os-material">b)&nbsp;&nbsp; Material: ${esc(d.material)}</div>
  <div class="indent2 os-material-lines">
    <div>b.1) Transporte: ${esc(d.transporte)}</div>
    <div>b.2) Armamento: Pessoal</div>
