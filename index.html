@@ -1255,12 +1255,10 @@ async function gerarPDFMobile(ids){
 
 async function imprimirPDFOficial(){
  atualizarTudo(true);
- if(dispositivoMovel()){
-  let gerou=false;
-  try{await gerarPDFMobile(["docOS","docReq","docAtestado","docRelatorio"]);gerou=true;}
-  catch(e){console.error(e);alert("Não foi possível gerar o PDF direto no celular. Vou abrir a impressão normal.");}
-  if(gerou)return;
- }
+ let gerou=false;
+ try{await gerarPDFMobile(["docOS","docReq","docAtestado","docRelatorio"]);gerou=true;}
+ catch(e){console.error(e);alert("Não foi possível gerar o PDF direto. Vou abrir a impressão normal.");}
+ if(gerou)return;
  limparOrientacaoPrint();
  document.querySelectorAll(".doc").forEach(d=>{
    d.classList.add("active");
@@ -1428,10 +1426,8 @@ function enviarOSporEmail(){
 }
 async function exportarPDFDoc(id){
  atualizarTudo(true);
- if(dispositivoMovel()){
-  try{await gerarPDFMobile([id]);return;}
-  catch(e){console.error(e);alert("Não foi possível gerar o PDF direto no celular. Vou abrir a impressão normal.");}
- }
+ try{await gerarPDFMobile([id]);return;}
+ catch(e){console.error(e);alert("Não foi possível gerar o PDF direto. Vou abrir a impressão normal.");}
  const docs=document.querySelectorAll(".doc");
  const prevSel=new Set([...docs].filter(d=>d.classList.contains("print-selected")).map(d=>d.id));
  const prevAll=new Set([...docs].filter(d=>d.classList.contains("print-all")).map(d=>d.id));
