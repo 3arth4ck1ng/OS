@@ -60,8 +60,8 @@ table{width:100%;border-collapse:collapse}.grid td,.grid th{border:1px solid #33
 
 /* Ajustes v5: compactação para impedir invasão/quebra indevida de páginas */
 .doc{
-  break-after: page;
-  page-break-after: always;
+  break-after: auto;
+  page-break-after: auto;
   overflow: hidden;
 }
 #docOS{
@@ -239,8 +239,10 @@ table{width:100%;border-collapse:collapse}.grid td,.grid th{border:1px solid #33
     box-shadow:none !important;
     margin:0 auto !important;
     overflow:hidden !important;
-    page-break-after:always !important;
-    break-after:page !important;
+    page-break-after:auto !important;
+    break-after:auto !important;
+    page-break-inside:avoid !important;
+    break-inside:avoid !important;
     box-sizing:border-box !important;
   }
 
@@ -683,7 +685,9 @@ input::placeholder,textarea::placeholder{color:#bbb;font-style:italic}
   page-break-before:auto !important;
   break-before:auto !important;
  }
- .doc.print-all ~ .doc.print-all{
+ #docReq.print-all,
+ #docAtestado.print-all,
+ #docRelatorio.print-all{
   page-break-before:always !important;
   break-before:page !important;
  }
@@ -693,6 +697,10 @@ input::placeholder,textarea::placeholder{color:#bbb;font-style:italic}
   page-break-after:auto !important;
   break-after:auto !important;
  }
+}
+
+#docReq table.req-chefia-table{
+ margin-top:18mm !important;
 }
 
 #docOS, #docOS *,
@@ -1080,7 +1088,7 @@ function renderReq(d){
  <tr><td colspan="2">Per.: ${esc(dataNum(d.dataViagem))} à ${esc(dataNum(d.dataRetorno))}</td><td colspan="2">Dest.: ${esc(d.destino)}</td><td colspan="2">Motivo: ${esc(d.motivo)}</td><td colspan="2">Tipo/Diária:</td></tr>
  <tr><td>Nome</td><td>Credor</td><td>Cargo</td><td>CPF</td><td>Pd</td><td>Origem</td><td>Qtd</td><td>Valor</td></tr>${rows}</table>
  <p style="margin-top:14px;">Solicito o pagamento de diária(s) ao(s) servidor(es) acima relacionado(s), relativa(s) à O.S. nº: ${esc(d.numeroOS)}/${esc(d.origemDP)}/${esc(d.origemRegiaoAbrev)}/DPU</p>
- <table style="margin-top:12px;border:none;"><tr><td style="border:none;width:52%;">Local: ${esc(d.origemCidade)}/${esc(d.origemUF)} Data: ${esc(dataNum(d.dataViagem))}</td><td style="border:none;text-align:center;border-top:1px solid #000;">Carimbo e ass. da chefia imediata</td></tr></table>
+ <table class="req-chefia-table" style="border:none;"><tr><td style="border:none;width:52%;">Local: ${esc(d.origemCidade)}/${esc(d.origemUF)} Data: ${esc(dataNum(d.dataViagem))}</td><td style="border:none;text-align:center;border-top:1px solid #000;">Carimbo e ass. da chefia imediata</td></tr></table>
  <p style="margin-top:18px;">OBS.: A Requisição de Diárias deverá estar acompanhada de cópia da Ordem de Serviço, e ser entregue até 05 (cinco) dias antes da viagem na Divisão de Finanças da Polícia Civil.</p>
  <p style="margin-top:12px;">ATENÇÃO: Prazo para Prestação de Contas: 10 (dez) dias a contar do retorno da viagem.</p>`;
 }
